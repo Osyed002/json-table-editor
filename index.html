@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+    <form class="w-full flex flex-col gap-4" id="mainForm" action="">
+        <div id="tableContainer" class="container mx-auto"></div>
+        <button
+            class="ml-auto mr-6 transition-all bg-blue-500 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded">Submit</button>
+    </form>
+</body>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script>
+    let data = {
+        "MWS_ACCESS_KEY": "abc",
+        "eu_env": false,
+        "client_id": "abc",
+        "time_zone": "Pacific Time (US & Canada)",
+        "subscriptions": {
+            "decathlondata": {
+                "email_invoice": false,
+                "subscription": {
+                    "discount": "100.0",
+                    "discount_expires_at": null
+                },
+                "ad_spend": {
+                    "discount": "100.0",
+                    "charge": "0.0",
+                    "expires_at": null
+                },
+                "gen_invoice": false
+            },
+            "paypal": {
+                "plan_id": "abc",
+                "client_id": "abc",
+                "client_secret": "abc"
+            }
+        },
+        "PROD_DB_USER_PASSWORD": "abc",
+        "message": "hello World",
+        "MWS_AUTH_TOKEN": "abc",
+        "PROD_RO_DB_HOST": "abc",
+        "MWS_SECRET_KEY": "",
+        "product_tier": "premium",
+        "billing": {
+            "email": "abc@abc.com"
+        },
+        "PROD_DB_NAME": "abc",
+        "PROD_DB_HOST": "abc",
+        "optimizations": {
+            "auto_opt": {
+                "exclude": [1],
+            }
+        },
+        "client": "qa",
+        "refresh_token": "abc",
+        "profile_id": "test2",
+        "PROD_DB_USER": "abc",
+        "MWS_MERCHANT_ID": "abc",
+        "client_secret": "abc",
+        "type": "amazon"
+    };
+    function initTable(data) {
+        const tableContainer = $('#tableContainer');
+        const tableWrapper = `
+        <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
+                <div class="overflow-hidden">
+                    <table class="min-w-full border text-center text-sm font-light">
+                    </table>
+                </div>
+            </div>
+        </div>`;
+
+        tableContainer.append(tableWrapper);
+        const mainTable = tableContainer.find('table');
+        const theadTag = $('<thead>').addClass('border-b font-medium');
+        const tBodyTag = $('<tbody>');
+        const tRowTagHead = $('<tr>');
+        const tRowTagBody = $('<tr>');
+
+        const createTable = (obj) => {
+            const table = $('<table>').addClass('min-w-full border text-center text-sm font-light');
+            const thead = $('<thead>').addClass('border-b font-medium');
+            const tbody = $('<tbody>');
+            const _tRowTagHead = $('<tr>');
+            const _tRowTagBody = $('<tr>');
+
+            for (const key in obj) {
+                const value = obj[key];
+                const th = $('<th>').addClass('border-r px-6 py-4').text(key);
+                const td = $('<td>', { key: key, class: 'whitespace-nowrap border-r px-6 py-4 font-medium' });
+
+                if (typeof value === 'object' && value !== null) {
+                    td.append(createTable(value));
+                } else {
+                    let textarea = $('<textarea>', { key: key });
+                    if (value == null) {
+                        textarea.attr('placeholder', 'null').val(value);
+                    } else {
+                        textarea.val(value);
+                    }
+                    textarea.addClass('p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 sm:text-xs outline-0').appendTo(td);
+                }
+
+                _tRowTagHead.append(th);
+                _tRowTagBody.append(td);
+            }
+            thead.append(_tRowTagHead);
+            tbody.append(_tRowTagBody);
+
+            table.append(thead, tbody);
+            return table;
+        };
+
+        for (const key in data) {
+            const value = data[key];
+            const th = $('<th>').addClass('border-r px-6 py-4').attr('scope', 'col').text(key);
+            const td = $('<td>', { key: key, class: 'whitespace-nowrap border-r px-6 py-4 font-medium' });
+
+            if (typeof value === 'object' && value !== null) {
+                td.append(createTable(value));
+            } else {
+                let textarea = $('<textarea>', { key: key });
+                if (value == null) {
+                    textarea.attr('placeholder', 'null').val(value);
+                } else {
+                    textarea.val(value);
+                }
+                textarea.addClass('p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 sm:text-xs outline-0').appendTo(td);
+            }
+            tRowTagHead.append(th);
+            tRowTagBody.append(td);
+
+        }
+        theadTag.append(tRowTagHead);
+        tBodyTag.append(tRowTagBody);
+
+        mainTable.append(theadTag, tBodyTag);
+    }
+
+    $(document).ready(function () {
+        initTable(data);
+        $('#mainForm').on('submit', function (e) {
+            console.log(data);
+            e.preventDefault();
+        });
+        // $('textarea').on('change', function () {
+        //     const inputValue = $(this).val();
+        //     const inputKey = $(this).attr('key');
+        //     let prevValue = data[inputKey];
+        //     if (prevValue != undefined) {
+        //         data[inputKey] = inputValue;
+        //     } else {
+        //         const key = $(this).closest('table').closest('td').attr('key');
+        //         const val = data[key][inputKey];
+        //         if (val != undefined) {
+        //             data[key][inputKey] = inputValue;
+        //         } else {
+        //             console.log("Undefined");
+        //         }
+        //     }
+        // });
+        $('textarea').on('change', function () {
+            const inputValue = $(this).val();
+            const inputKey = $(this).attr('key');
+            function updateNestedObject(obj, keys, value) {
+                const currentKey = keys.shift();
+                if (keys.length === 0) {
+                    obj[currentKey] = value;
+                } else {
+                    if (!obj[currentKey]) {
+                        console.log("Undefined");
+                        return;
+                    }
+                    updateNestedObject(obj[currentKey], keys, value);
+                }
+            }
+            let keys = [inputKey];
+            let parentTable = $(this).closest('table').closest('td');
+            while (parentTable.length > 0) {
+                keys.unshift(parentTable.attr('key'));
+                parentTable = parentTable.closest('table').closest('td');
+            }
+            updateNestedObject(data, keys, inputValue);
+        });
+    });
+</script>
+
+</html>
